@@ -86,7 +86,7 @@ namespace Google.PowerShell.Tests.Provider
             Pipeline.Commands.AddScript($"Get-Item {bucketName}");
             Collection<PSObject> results = Pipeline.Invoke();
 
-            Assert.AreEqual(0, Pipeline.Error.Count);
+            CollectionAssert.AreEqual(new object[] { }, Pipeline.Error.ReadToEnd());
             Assert.AreEqual(1, results.Count);
             var returnedBucket = results[0].BaseObject as Bucket;
             Assert.IsNotNull(returnedBucket);

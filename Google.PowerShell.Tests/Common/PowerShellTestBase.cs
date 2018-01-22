@@ -17,6 +17,7 @@ using NUnit.Framework;
 using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
+using System.Reflection;
 
 namespace Google.PowerShell.Tests.Common
 {
@@ -56,6 +57,15 @@ namespace Google.PowerShell.Tests.Common
         protected readonly RunspaceConfiguration Config = RunspaceConfiguration.Create();
         protected Pipeline Pipeline;
 
+        [OneTimeSetUp]
+        public void BeforeAll()
+        {
+
+            Assembly gcloudPowershell = typeof(GCloudCmdlet).Assembly;
+            Config.Assemblies.Append(
+                new AssemblyConfigurationEntry(gcloudPowershell.FullName, gcloudPowershell.Location));
+        }
+
         [SetUp]
         public void BeforeEach()
         {
@@ -83,7 +93,7 @@ namespace Google.PowerShell.Tests.Common
         {
             Collection<object> errorRecords = Pipeline.Error.ReadToEnd();
             Assert.AreEqual(errorRecords.Count, 1);
-            ErrorRecord errorRecord = (errorRecords[0] as PSObject)?.BaseObject as ErrorRecord;
+            var errorRecord = (errorRecords[0] as PSObject)?.BaseObject as ErrorRecord;
             Assert.IsNotNull(errorRecord);
             Assert.AreEqual(errorRecord.CategoryInfo.Category, ErrorCategory.ResourceExists);
         }
