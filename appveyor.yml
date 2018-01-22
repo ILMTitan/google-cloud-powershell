@@ -48,15 +48,20 @@ before_build:
   - ps: (Get-Content -Raw "C:\projects\google-cloud-powershell\Google.PowerShell\Google.PowerShell.csproj").Replace('"$(SolutionDir)\third_party\XmlDoc2CmdletDoc\XmlDoc2CmdletDoc.exe" "$(TargetPath)"', "") | Out-File "C:\projects\google-cloud-powershell\Google.PowerShell\Google.PowerShell.csproj" -Encoding utf8
 
 build:
-  - project: C:\projects\google-cloud-powershell\Google.PowerShell\Google.PowerShell.csproj
-    verbosity: minimal
-  - project: C:\projects\google-cloud-powershell\Gooogle.PowerShell.Tests\Google.PowerShell.Tests.csproj
-    verbosity: minimal
+  project: C:\projects\google-cloud-powershell\Google.PowerShell\Google.PowerShell.csproj
+  verbosity: minimal
 
+before_test:
+  -ps: |
+      if (-not $env:test_folder) {
+          msbuild "C:\projects\google-cloud-powershell\Gooogle.PowerShell.Tests\Google.PowerShell.Tests.csproj"
+      }
 test_script:
   - ps: |
-      if ($env:ENCRYPTION_KEY -and $env:test_folder) {
-          . "C:\projects\google-cloud-powershell\Google.PowerShell.IntegrationTests\GcloudCmdlets.ps1"; Start-PesterTest
+      if ($env:test_folder) {
+          if($env:ENCRYPTION_KEY) {
+              . "C:\projects\google-cloud-powershell\Google.PowerShell.IntegrationTests\GcloudCmdlets.ps1"; Start-PesterTest
+          }
       } else {
           .\TestScript.ps1
       }
