@@ -7,6 +7,7 @@ environment:
   ENCRYPTION_KEY:
     secure: wR1u+Zd4yeQYm0EcoypygXKhUDXMAGCmNIR/pC/juWU=
   matrix:
+    - test_folder: ""
     - test_folder: "PubSub"
     - test_folder: "Logging"
     - test_folder: "Storage"
@@ -20,19 +21,28 @@ environment:
     - test_folder: "SQL3"
     - test_folder: "Container"
     - test_folder: "Container2"
+matrix:
+  exclude:
+    - APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH: master
 before_build:
   - nuget restore
-  - nuget install secure-file -ExcludeVersion
-  # Unencrypt the service account credentials.
-  - secure-file\tools\secure-file -decrypt "C:\projects\google-cloud-powershell\Google.PowerShell.IntegrationTests\ServiceAccountCredentials.json.enc" -secret %ENCRYPTION_KEY%
-  - secure-file\tools\secure-file -decrypt "C:\projects\google-cloud-powershell\Google.PowerShell.IntegrationTests\AdditionalServiceAccountCredentials.json.enc" -secret %ENCRYPTION_KEY%
   # Install Pester.
   - cinst -y pester
-  # Install Google Cloud SDK and set up the credentials.
-  - ps: . "C:\projects\google-cloud-powershell\Google.PowerShell.IntegrationTests\GcloudCmdlets.ps1"; Install-CloudSdk
-  - ps: Copy-Item "C:\projects\google-cloud-powershell\Google.PowerShell.IntegrationTests\ServiceAccountCredentials.json" "$env:APPDATA\gcloud\ServiceAccountCredentials.json"
-  - ps: $env:GOOGLE_APPLICATION_CREDENTIALS = "$env:APPDATA\gcloud\ServiceAccountCredentials.json"
-  - ps: Start-Process -FilePath gcloud -ArgumentList "auth activate-service-account --key-file=`"$env:GOOGLE_APPLICATION_CREDENTIALS`"" -NoNewWindow -ErrorAction Ignore
+  - choco install opencover.portable
+  - choco install codecov
+  # Unencrypt the service account credentials.
+  - ps: |
+      if ($env:ENCRYPTION_KEY) {
+          nuget install secure-file -ExcludeVersion
+          secure-file\tools\secure-file -decrypt "Google.PowerShell.IntegrationTests\ServiceAccountCredentials.json.enc" -secret $env:ENCRYPTION_KEY
+          secure-file\tools\secure-file -decrypt "Google.PowerShell.IntegrationTests\AdditionalServiceAccountCredentials.json.enc" -secret $env:ENCRYPTION_KEY
+          # Install Google Cloud SDK and set up the credentials.
+          . "C:\projects\google-cloud-powershell\Google.PowerShell.IntegrationTests\GcloudCmdlets.ps1"; Install-CloudSdk
+          Copy-Item "Google.PowerShell.IntegrationTests\ServiceAccountCredentials.json" "$env:APPDATA\gcloud\ServiceAccountCredentials.json"
+          $env:GOOGLE_APPLICATION_CREDENTIALS = "$env:APPDATA\gcloud\ServiceAccountCredentials.json"
+          Start-Process -FilePath gcloud -ArgumentList "auth activate-service-account --key-file=`"$env:GOOGLE_APPLICATION_CREDENTIALS`"" -NoNewWindow -ErrorAction Ignore
+      }
+
   # We have to remove the generating comments part from the build to avoid permission being denied when running the executables.
   - ps: (Get-Content -Raw "C:\projects\google-cloud-powershell\Google.PowerShell\Google.PowerShell.csproj").Replace('"$(SolutionDir)\third_party\XmlDoc2CmdletDoc\XmlDoc2CmdletDoc.exe" "$(TargetPath)"', "") | Out-File "C:\projects\google-cloud-powershell\Google.PowerShell\Google.PowerShell.csproj" -Encoding utf8
 
@@ -41,4 +51,14 @@ build:
   verbosity: minimal
 
 test_script:
-  - ps: . "C:\projects\google-cloud-powershell\Google.PowerShell.IntegrationTests\GcloudCmdlets.ps1"; Start-PesterTest
+  - ps: |
+      if ($env:ENCRYPTION_KEY -and $env:test_folder) {
+          . "C:\projects\google-cloud-powershell\Google.PowerShell.IntegrationTests\GcloudCmdlets.ps1"; Start-PesterTest
+      } else {
+          .\TestScript.ps1
+      }
+after_test:
+  - ps: |
+      if (Test-Path codecoverage.xml) {
+          codecov -f codecoverage.xml
+      }

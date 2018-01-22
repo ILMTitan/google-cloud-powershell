@@ -177,11 +177,14 @@ Install-GCloudSdk
 
 # Import either .NET Core or .NET Full version of the module based on
 # the edition of PowerShell.
-if ($PSVersionTable.PSEdition -eq "Core") {
-    Import-Module "$script:GCloudModulePath\coreclr\Google.PowerShell.dll"
-}
-else {
-    Import-Module "$script:GCloudModulePath\fullclr\Google.PowerShell.dll"
+$coreLibraryPath = "$script:GCloudModulePath\coreclr\Google.PowerShell.dll"
+$frameworkLibraryPath = "$script:GCloudModulePath\fullclr\Google.PowerShell.dll"
+if ($PSVersionTable.PSEdition -eq "Core" -and (Test-Path $coreLibraryPath)) {
+    Import-Module $coreLibraryPath
+} elseif ($PSVersionTable.PSEdition -ne "Core" -and (Test-Path $frameworkLibraryPath)) {
+    Import-Module $frameworkLibraryPath
+} else {
+    Import-Module "$script:GCloudModulePath\Google.PowerShell.dll"
 }
 
 function gs:() {

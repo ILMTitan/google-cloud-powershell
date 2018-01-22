@@ -101,6 +101,13 @@ function Install-CloudSdk() {
 # Runs pester test in folder $env:test_folder and throws error if any test fails.
 function Start-PesterTest() {
     $testResult = Invoke-Pester "$PSScriptRoot\$env:test_folder" -PassThru
+    if ($env:APPVEYOR) {
+        $testResult.TestResult | %{
+            Add-AppveyorTest -Name ($_.Describe + " " + $_.It) -Framework "Pester" `
+                -Filename "$PSScriptRoot\$env:test_folder" -Outcome $_.Result -Duration $_.Time.TotalMilliseconds `
+                -ErrorMessage $_.FailureMessage -ErrorStackTrace $_.StackTrace
+        }
+    }
     if ($testResult.FailedCount -gt 0) {
         throw "$($testResult.FailedCount) tests failed."
     }
