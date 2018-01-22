@@ -4,7 +4,7 @@ branches:
     - master
 clone_folder: C:\projects\google-cloud-powershell
 environment:
-  Path: C:\Tools\NUnit3;%Path%
+  Path: C:\Tools\NUnit3;$(Path)
   ENCRYPTION_KEY:
     secure: wR1u+Zd4yeQYm0EcoypygXKhUDXMAGCmNIR/pC/juWU=
   matrix:
@@ -48,8 +48,10 @@ before_build:
   - ps: (Get-Content -Raw "C:\projects\google-cloud-powershell\Google.PowerShell\Google.PowerShell.csproj").Replace('"$(SolutionDir)\third_party\XmlDoc2CmdletDoc\XmlDoc2CmdletDoc.exe" "$(TargetPath)"', "") | Out-File "C:\projects\google-cloud-powershell\Google.PowerShell\Google.PowerShell.csproj" -Encoding utf8
 
 build:
-  project: C:\projects\google-cloud-powershell\Google.PowerShell\Google.PowerShell.csproj
-  verbosity: minimal
+  - project: C:\projects\google-cloud-powershell\Google.PowerShell\Google.PowerShell.csproj
+    verbosity: minimal
+  - project: C:\projects\google-cloud-powershell\Gooogle.PowerShell.Tests\Google.PowerShell.Tests.csproj
+    verbosity: minimal
 
 test_script:
   - ps: |
