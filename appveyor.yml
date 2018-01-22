@@ -58,7 +58,7 @@ test_script:
               . "C:\projects\google-cloud-powershell\Google.PowerShell.IntegrationTests\GcloudCmdlets.ps1"; Start-PesterTest
           }
       } else {
-          msbuild "C:\projects\google-cloud-powershell\Gooogle.PowerShell.Tests\Google.PowerShell.Tests.csproj"
+          msbuild "C:\projects\google-cloud-powershell\Google.PowerShell.Tests\Google.PowerShell.Tests.csproj"
           .\TestScript.ps1
       }
 after_test:
