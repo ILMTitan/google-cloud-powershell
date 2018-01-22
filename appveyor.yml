@@ -4,6 +4,7 @@ branches:
     - master
 clone_folder: C:\projects\google-cloud-powershell
 environment:
+  Path: "C:\Tools\NUnit3;$env:Path"
   ENCRYPTION_KEY:
     secure: wR1u+Zd4yeQYm0EcoypygXKhUDXMAGCmNIR/pC/juWU=
   matrix:

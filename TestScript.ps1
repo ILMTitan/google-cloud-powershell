@@ -20,10 +20,10 @@ $testFilters = ($testDlls.BaseName | % { "-[$_]*"}) -join " "
 
 $filter = $testFilters, "+[Google.PowerShell*]*" -join " "
 
-Write-Verbose "OpenCover.Console.exe -register:user -target:nunit3-console -targetargs:$testArgs -output:codecoverage.xml `
+Write-Verbose "OpenCover.Console.exe -register:user -target:nunit3-console.exe -targetargs:$testArgs -output:codecoverage.xml `
     -filter:$filter -returntargetcode"
 
-OpenCover.Console.exe -register:user -target:nunit3-console -targetargs:$testArgs -output:codecoverage.xml `
+OpenCover.Console.exe -register:user -target:nunit3-console.exe -targetargs:$testArgs -output:codecoverage.xml `
     -filter:$filter -returntargetcode
 
 if ($LASTEXITCODE) {
