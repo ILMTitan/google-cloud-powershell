@@ -51,11 +51,6 @@ build:
   project: C:\projects\google-cloud-powershell\Google.PowerShell\Google.PowerShell.csproj
   verbosity: minimal
 
-before_test:
-  -ps: |
-      if (-not $env:test_folder) {
-          msbuild "C:\projects\google-cloud-powershell\Gooogle.PowerShell.Tests\Google.PowerShell.Tests.csproj"
-      }
 test_script:
   - ps: |
       if ($env:test_folder) {
@@ -63,6 +58,7 @@ test_script:
               . "C:\projects\google-cloud-powershell\Google.PowerShell.IntegrationTests\GcloudCmdlets.ps1"; Start-PesterTest
           }
       } else {
+          msbuild "C:\projects\google-cloud-powershell\Gooogle.PowerShell.Tests\Google.PowerShell.Tests.csproj"
           .\TestScript.ps1
       }
 after_test:
