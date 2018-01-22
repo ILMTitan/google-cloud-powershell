@@ -14,8 +14,12 @@
 
 using Google.PowerShell.Common;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Management.Automation;
+using System.Management.Automation.Provider;
 using System.Management.Automation.Runspaces;
 using System.Reflection;
 
@@ -62,8 +66,28 @@ namespace Google.PowerShell.Tests.Common
         {
 
             Assembly gcloudPowershell = typeof(GCloudCmdlet).Assembly;
-            Config.Assemblies.Append(
-                new AssemblyConfigurationEntry(gcloudPowershell.FullName, gcloudPowershell.Location));
+            IEnumerable<CmdletConfigurationEntry> cmdletEntries = gcloudPowershell.GetExportedTypes()
+                    .Where(t => t.GetCustomAttributes(false).OfType<CmdletAttribute>().Any())
+                    .Select(BuildCmdletEntry);
+            Config.Cmdlets.Append(cmdletEntries);
+            IEnumerable<ProviderConfigurationEntry> providerEntries = gcloudPowershell.GetExportedTypes()
+                    .Where(t => t.GetCustomAttributes(false).OfType<CmdletProviderAttribute>().Any())
+                    .Select(BuildProviderEntry);
+            Config.Providers.Append(providerEntries);
+        }
+
+        private static ProviderConfigurationEntry BuildProviderEntry(Type type)
+        {
+            CmdletProviderAttribute providerData =
+                    type.GetCustomAttributes(false).OfType<CmdletProviderAttribute>().Single();
+            return new ProviderConfigurationEntry(providerData.ProviderName, type, "");
+        }
+
+        private static CmdletConfigurationEntry BuildCmdletEntry(Type type)
+        {
+            CmdletAttribute cmdletData = type.GetCustomAttributes(false).OfType<CmdletAttribute>().Single();
+            return new CmdletConfigurationEntry(
+                $"{cmdletData.VerbName}-{cmdletData.NounName}", type, "");
         }
 
         [SetUp]
